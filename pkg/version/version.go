@@ -145,6 +145,7 @@ func (b BuildInfo) LongForm() string {
 }
 
 func init() {
+	/*此包初始化时，构造Info,填充构建信息*/
 	Info = BuildInfo{
 		Version:       buildVersion,
 		GitRevision:   buildGitRevision,

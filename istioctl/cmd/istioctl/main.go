@@ -26,16 +26,19 @@ import (
 )
 
 func main() {
+	/*加载配置文件，处理环境变量*/
 	if err := cmd.ConfigAndEnvProcessing(); err != nil {
 		fmt.Fprintf(os.Stderr, "Could not initialize: %v\n", err)
 		exitCode := cmd.GetExitCode(err)
 		os.Exit(exitCode)
 	}
 
+	/*初始化root cmd，这个函数用于构造各子命令*/
 	rootCmd := cmd.GetRootCmd(os.Args[1:])
 
 	log.EnableKlogWithCobra()
 
+	/*执行命令*/
 	if err := rootCmd.Execute(); err != nil {
 		exitCode := cmd.GetExitCode(err)
 		os.Exit(exitCode)

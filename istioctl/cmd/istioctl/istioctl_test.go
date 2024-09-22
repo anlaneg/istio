@@ -19,6 +19,7 @@ import (
 	"testing"
 )
 
+/*测试命令istioctl version --remote=false*/
 func TestIstioctlMain(_ *testing.T) {
 	os.Args = []string{"istioctl", "version", "--remote=false"}
 	main()

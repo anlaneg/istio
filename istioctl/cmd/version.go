@@ -39,12 +39,16 @@ import (
 func newVersionCommand() *cobra.Command {
 	profileCmd := mesh.ProfileCmd(log.DefaultOptions())
 	var opts clioptions.ControlPlaneOptions
+	/*能过option初始化version cmd*/
 	versionCmd := istioVersion.CobraCommandWithOptions(istioVersion.CobraOptions{
+			/*获取remote version的实现函数*/
 		GetRemoteVersion: getRemoteInfoWrapper(&profileCmd, &opts),
+		/*获取dataplane version的实现函数*/
 		GetProxyVersions: getProxyInfoWrapper(&opts),
 	})
 	opts.AttachControlPlaneFlags(versionCmd)
 
+	/*将以下flags默认设置true*/
 	versionCmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		if flag.Name == "short" {
 			err := flag.Value.Set("true")
@@ -87,7 +91,9 @@ func getRemoteInfoWrapper(pc **cobra.Command, opts *clioptions.ControlPlaneOptio
 }
 
 func getProxyInfoWrapper(opts *clioptions.ControlPlaneOptions) func() (*[]istioVersion.ProxyInfo, error) {
+	/*返回匿名函数*/
 	return func() (*[]istioVersion.ProxyInfo, error) {
+		/*此匿名函数实现为GetProxyInfo*/
 		return proxy.GetProxyInfo(kubeconfig, configContext, opts.Revision, istioNamespace)
 	}
 }

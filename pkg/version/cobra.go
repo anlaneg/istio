@@ -65,27 +65,37 @@ func CobraCommandWithOptions(options CobraOptions) *cobra.Command {
 		serverErr     error
 	)
 
+	/*构造version命令*/
 	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Prints out build version information",
+		Use:   "version",/*用法介绍*/
+		Short: "Prints out build version information",/*简短介绍*/
+		/*此命令执行*/
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if output != "" && output != "yaml" && output != "json" {
+				/*output必须二者之间选其一*/
 				return errors.New(`--output must be 'yaml' or 'json'`)
 			}
 
+			/*设置client版本*/
 			version.ClientVersion = &Info
 
 			if options.GetRemoteVersion != nil && remote {
+				/*提供了GetRemoteVersion回调，且remote为真，则调用GetRemoteVersion*/
 				remoteVersion, serverErr = options.GetRemoteVersion()
 				if serverErr != nil {
+					/*调用出错*/
 					return serverErr
 				}
+				/*设置远端version*/
 				version.MeshVersion = remoteVersion
 			}
+			
+			/*如果提供了GetProxyVersions，且remote为真，则调用GetProxyVersions*/
 			if options.GetProxyVersions != nil && remote {
 				version.DataPlaneVersion, _ = options.GetProxyVersions()
 			}
 
+			/*按output要求进行输出*/
 			switch output {
 			case "":
 				if short {
@@ -99,18 +109,25 @@ func CobraCommandWithOptions(options CobraOptions) *cobra.Command {
 					} else {
 						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", version.ClientVersion.Version)
 					}
+					
 					if version.DataPlaneVersion != nil {
 						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "data plane version: %s\n", renderProxyVersions(version.DataPlaneVersion))
 					}
 				} else {
+					/*默认走此流程*/
 					if remoteVersion != nil {
-						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "client version: %s\n", version.ClientVersion.LongForm())
+						/*显示client version*/
+						_, _ = fmt.Fprintf(cmd.OutOrStdout()/*取stdout writer*/, "client version: %s\n", version.ClientVersion.LongForm())
+						/*显示remote version*/
 						for _, remote := range *remoteVersion {
 							_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s version: %s\n", remote.Component, remote.Info.LongForm())
 						}
 					} else {
+						/*无remote,仅显示client version*/
 						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", version.ClientVersion.LongForm())
 					}
+					
+					/*显示dataplane version*/
 					if version.DataPlaneVersion != nil {
 						for _, proxy := range *version.DataPlaneVersion {
 							_, _ = fmt.Fprintf(cmd.OutOrStdout(), "data plane version: %#v\n", proxy)
@@ -134,6 +151,7 @@ func CobraCommandWithOptions(options CobraOptions) *cobra.Command {
 	cmd.Flags().BoolVarP(&short, "short", "s", false, "Use --short=false to generate full version information")
 	cmd.Flags().StringVarP(&output, "output", "o", "", "One of 'yaml' or 'json'.")
 	if options.GetRemoteVersion != nil {
+		/*通过remote参数来抑制control plane检查*/
 		cmd.Flags().BoolVar(&remote, "remote", false, "Use --remote=false to suppress control plane check")
 	}
 

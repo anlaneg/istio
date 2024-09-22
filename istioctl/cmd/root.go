@@ -103,9 +103,13 @@ func defaultLogOptions() *log.Options {
 
 // ConfigAndEnvProcessing uses spf13/viper for overriding CLI parameters
 func ConfigAndEnvProcessing() error {
+	//配置文件所在路径
 	configPath := filepath.Dir(IstioConfig)
+	/*配置文件名称*/
 	baseName := filepath.Base(IstioConfig)
+	/*配置文件后缀*/
 	configType := filepath.Ext(IstioConfig)
+	/*配置名称（不含后缀的文件名称）*/
 	configName := baseName[0 : len(baseName)-len(configType)]
 	if configType != "" {
 		configType = configType[1:]
@@ -113,14 +117,14 @@ func ConfigAndEnvProcessing() error {
 
 	// Allow users to override some variables through $HOME/.istioctl/config.yaml
 	// and environment variables.
-	viper.SetEnvPrefix("ISTIOCTL")
-	viper.AutomaticEnv()
+	viper.SetEnvPrefix("ISTIOCTL")/*设置环境变量前缀*/
+	viper.AutomaticEnv()/*开启自动load*/
 	viper.AllowEmptyEnv(true) // So we can say ISTIOCTL_CERT_DIR="" to suppress certs
-	viper.SetConfigName(configName)
-	viper.SetConfigType(configType)
-	viper.AddConfigPath(configPath)
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	err := viper.ReadInConfig()
+	viper.SetConfigName(configName)/*设置配置文件名称，不含后缀*/
+	viper.SetConfigType(configType)/*设置配置文件类型，例如ymal,json,*/
+	viper.AddConfigPath(configPath)/*添加搜索路径*/
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))/*设置替换容错方式*/
+	err := viper.ReadInConfig()/*读取配置文件，并加载*/
 	// Ignore errors reading the configuration unless the file is explicitly customized
 	if IstioConfig != defaultIstioctlConfig {
 		return err
@@ -136,6 +140,7 @@ func init() {
 
 // GetRootCmd returns the root of the cobra command-tree.
 func GetRootCmd(args []string) *cobra.Command {
+	/*创建cobra.command，其对应的关键字是istioctl*/
 	rootCmd := &cobra.Command{
 		Use:               "istioctl",
 		Short:             "Istio control interface.",
@@ -147,13 +152,15 @@ debug and diagnose their Istio mesh.
 		PersistentPreRunE: configureLogging,
 	}
 
+	/*设置command对应的args*/
 	rootCmd.SetArgs(args)
 
+	/*设置命令行persistent的标记*/
 	rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "c", "",
-		"Kubernetes configuration file")
+		"Kubernetes configuration file")/*k8s配置文件*/
 
 	rootCmd.PersistentFlags().StringVar(&configContext, "context", "",
-		"The name of the kubeconfig context to use")
+		"The name of the kubeconfig context to use")/*context名称*/
 
 	rootCmd.PersistentFlags().StringVarP(&istioNamespace, FlagIstioNamespace, "i", viper.GetString(FlagIstioNamespace),
 		"Istio system namespace")
@@ -161,6 +168,7 @@ debug and diagnose their Istio mesh.
 	rootCmd.PersistentFlags().StringVarP(&namespace, FlagNamespace, "n", v1.NamespaceAll,
 		"Config namespace")
 
+	/*注册command以支持补全*/
 	_ = rootCmd.RegisterFlagCompletionFunc(FlagIstioNamespace, validNamespaceArgs)
 	_ = rootCmd.RegisterFlagCompletionFunc(FlagNamespace, validNamespaceArgs)
 
@@ -171,11 +179,13 @@ debug and diagnose their Istio mesh.
 		"log_rotate_max_size", "log_stacktrace_level", "log_target", "log_caller", "log_output_level",
 	}
 	for _, opt := range hiddenFlags {
+		/*标记这些command为hidden,仍可正常工作，但不对外展示*/
 		_ = rootCmd.PersistentFlags().MarkHidden(opt)
 	}
 
 	cmd.AddFlags(rootCmd)
 
+	/*rootCmd添加kubeInject*/
 	kubeInjectCmd := injectCommand()
 	hideInheritedFlags(kubeInjectCmd, FlagNamespace)
 	rootCmd.AddCommand(kubeInjectCmd)
@@ -191,7 +201,7 @@ debug and diagnose their Istio mesh.
 		xdsStatusCommand(),
 	}
 	debugBasedTroubleshooting := []*cobra.Command{
-		newVersionCommand(),
+		newVersionCommand(),/*version cmd创建,用于版本显示不*/
 		statusCommand(),
 	}
 	var debugCmdAttachmentPoint *cobra.Command
@@ -292,6 +302,7 @@ debug and diagnose their Istio mesh.
 	hideInheritedFlags(validateCmd, "kubeconfig")
 	rootCmd.AddCommand(validateCmd)
 
+	/*添加options命令：*/
 	rootCmd.AddCommand(optionsCommand(rootCmd))
 
 	// BFS applies the flag error function to all subcommands

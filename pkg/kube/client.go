@@ -780,6 +780,7 @@ func (c *client) portForwardRequest(ctx context.Context, podName, podNamespace, 
 	return out, nil
 }
 
+/* 获取istio pods*/
 func (c *client) GetIstioPods(ctx context.Context, namespace string, opts metav1.ListOptions) ([]v1.Pod, error) {
 	if c.revision != "" {
 		if opts.LabelSelector != "" {

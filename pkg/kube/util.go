@@ -61,6 +61,7 @@ func BuildClientConfig(kubeconfig, context string) (*rest.Config, error) {
 // difference that it loads default configs if not running in-cluster.
 func BuildClientCmd(kubeconfig, context string, overrides ...func(*clientcmd.ConfigOverrides)) clientcmd.ClientConfig {
 	if kubeconfig != "" {
+		/*检查kubeconfig文件，必须存在，且大小不得为0，否则忽略此配置*/
 		info, err := os.Stat(kubeconfig)
 		if err != nil || info.Size() == 0 {
 			// If the specified kubeconfig doesn't exists / empty file / any other error
@@ -74,8 +75,11 @@ func BuildClientCmd(kubeconfig, context string, overrides ...func(*clientcmd.Con
 	// 2. Config(s) in KUBECONFIG environment variable
 	// 3. In cluster config if running in-cluster
 	// 4. Use $HOME/.kube/config
+	// 构造一个ClientConfigLoadingRules
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	// 指定默认client config
 	loadingRules.DefaultClientConfig = &clientcmd.DefaultClientConfig
+	// 指定配置文件
 	loadingRules.ExplicitPath = kubeconfig
 	configOverrides := &clientcmd.ConfigOverrides{
 		ClusterDefaults: clientcmd.ClusterDefaults,
@@ -86,6 +90,7 @@ func BuildClientCmd(kubeconfig, context string, overrides ...func(*clientcmd.Con
 		fn(configOverrides)
 	}
 
+	// 创建client config
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
 }
 

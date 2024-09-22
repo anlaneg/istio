@@ -502,6 +502,7 @@ const (
 	defaultWebhookName             = "sidecar-injector.istio.io"
 )
 
+/*构造kube-inject命令*/
 func injectCommand() *cobra.Command {
 	var opts clioptions.ControlPlaneOptions
 	var centralOpts clioptions.CentralControlPlaneOptions
